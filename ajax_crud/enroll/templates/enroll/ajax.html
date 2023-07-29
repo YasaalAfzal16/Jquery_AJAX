@@ -1,0 +1,134 @@
+<script>
+  $("#btnsave").click(function () {
+    //console.log("Save Button Clicked");
+
+    output = "";
+
+    let sid = $("#stu_id").val();
+    let nm = $("#nameid").val();
+    let em = $("#emailid").val();
+    let pwd = $("#passwordid").val();
+
+    // Fetching csrf token to be sent to server:
+    let csrf = $("input[name=csrfmiddlewaretoken]").val();
+
+    if (nm === "") {
+      alert("Please enter Name");
+    } else if (em === "") {
+      alert("Please enter Email");
+    } else if (pwd === "") {
+      alert("Please enter Password");
+    } else {
+      my_data = {
+        stuid: sid,
+        name: nm,
+        email: em,
+        password: pwd,
+        csrfmiddlewaretoken: csrf,
+      };
+
+      $.ajax({
+        url: "{% url 'save' %}",
+        method: "POST",
+        data: my_data,
+        dataType: "json",
+        success: (data) => {
+          // console.log(data)
+          x = data.stud_data;
+          if (data.status === 1) {
+            $("#msg").text("Form submitted successfully !!");
+            $("#msg").show();
+            // console.log(x)
+            for (i = 0; i < x.length; i++) {
+              output +=
+                "<tr><td>" +
+                x[i].id +
+                "</td><td>" +
+                x[i].name +
+                "</td><td>" +
+                x[i].email +
+                "</td><td>" +
+                x[i].password +
+                "</td><td> <input type='button' class='btn btn-warning btn-sm btn-edit' data-sid=" +
+                x[i].id +
+                " value='Edit'> <input type='button' class='btn btn-danger btn-sm btn-del' data-sid=" +
+                x[i].id +
+                " value='Delete'></td></tr>"; // Another error appeared here, we removed ending '/' at both input tags causing it to append on IDs
+            }
+
+            $("#tbody").html(output);
+            $("#stu_id").val("");
+            $("form")[0].reset();
+          }
+          if (data.status === 0) {
+            $("#msg").text("Unable to save form");
+            $("#msg").show();
+            $("#stu_id").val("");
+            $("form")[0].reset();
+          }
+        },
+      });
+    }
+  });
+
+  //************************** Delete Data:
+
+  $(".btn-del").click(function () {
+    var bid = $(this).attr("data-sid"); // button ID
+
+    // Fetching csrf token to be sent to server:
+    let csrf = $("input[name=csrfmiddlewaretoken]").val();
+
+    console.log("btn clicked");
+    console.log("Button ID: ", bid);
+
+    myData = { sid: bid, csrfmiddlewaretoken: csrf };
+
+    myThis = this;
+
+    $.ajax({
+      url: "{% url 'delete' %}",
+      method: "POST",
+      data: myData,
+      success: (data) => {
+        //console.log(data)
+        if (data.status == 1) {
+          $("#msg").text("Data Deleted Successfully ...");
+          $("#msg").show();
+          $(myThis).closest("tr").fadeOut();
+        }
+        if (data.status == 0) {
+          $("#msg").text("Unable to Delete Data!");
+          $("#msg").show();
+        }
+      },
+    });
+  });
+
+  //************************** Edit Data:
+  //"input[type=button]"
+  $(".btn-edit").click(function () {
+    var bid = $(this).attr("data-sid"); // button ID
+
+    // Fetching csrf token to be sent to server:
+    let csrf = $("input[name=csrfmiddlewaretoken]").val();
+
+    console.log("btn clicked");
+    console.log("Button ID: ", bid);
+
+    myData = { sid: bid, csrfmiddlewaretoken: csrf };
+
+    $.ajax({
+      url: "{% url 'edit' %}",
+      method: "POST",
+      data: myData,
+      success: (data) => {
+        console.log("In btn-edit function:", data);
+        $("#stu_id").val(data.id); // Here was the problem: I`ve given class instead of id, just missed # `
+        $("#nameid").val(data.name);
+        $("#emailid").val(data.email);
+        $("#passwordid").val(data.password);
+      },
+    });
+  });
+</script>
