@@ -1,0 +1,3 @@
+# Jquery_AJAX
+
+This project is made to learn how Jquery AJAX works plus how it enable us to display updated data without refreshing the page....
